@@ -568,6 +568,9 @@
 		var _plane = "XY";
 
 		var changeEvent = { type: "change" };
+		var mouseDownEvent = { type: "mouseDown" };
+		var mouseUpEvent = { type: "mouseUp", mode: _mode };
+		var objectChangeEvent = { type: "objectChange" };
 
 		var ray = new THREE.Raycaster();
 		var projector = new THREE.Projector();
@@ -724,15 +727,17 @@
 
 			var intersect = intersectObjects( pointer, scope.gizmo[_mode].pickers.children );
 
+			var axis = null;
+
 			if ( intersect ) {
 
-				scope.axis = intersect.object.name;
-				scope.update();
-				scope.dispatchEvent( changeEvent );
+				axis = intersect.object.name;
 
-			} else if ( scope.axis !== null ) {
+			}
 
-				scope.axis = null;
+			if ( scope.axis !== axis ) {
+
+				scope.axis = axis;
 				scope.update();
 				scope.dispatchEvent( changeEvent );
 
@@ -754,6 +759,8 @@
 				var intersect = intersectObjects( pointer, scope.gizmo[_mode].pickers.children );
 
 				if ( intersect ) {
+
+					scope.dispatchEvent( mouseDownEvent );
 
 					scope.axis = intersect.object.name;
 
@@ -815,7 +822,7 @@
 					scope.object.position.copy( oldPosition );
 					scope.object.position.add( point );
 
-				} 
+				}
 
 				if ( scope.space == "world" || scope.axis.search("XYZ") != -1 ) {
 
@@ -948,12 +955,16 @@
 			}
 
 			scope.update();
-			scope.dispatchEvent( changeEvent );
+			scope.dispatchEvent( objectChangeEvent );
 
 		}
 
 		function onPointerUp( event ) {
 
+			if ( _dragging && ( scope.axis !== null ) ) {
+				mouseUpEvent.mode = _mode;
+				scope.dispatchEvent( mouseUpEvent )
+			}
 			_dragging = false;
 			onPointerHover( event );
 
